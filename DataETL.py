@@ -179,7 +179,7 @@ class DataETL9B(DataETL):
         self.WIDTH = 64
         self.HEIGHT = 64
         self.RECLENGTH = 576
-        self.NUM_CHARS = 3036
+        self.NUM_CHARS = 3036 -71
         self.WRITERS = 40   # This is per set only. Total = 5*40 writers
         self.NUM_DATASETS = 5
         self.SAVE_WRITER = 0 # set to negative to skip image writing
@@ -196,7 +196,7 @@ class DataETL9B(DataETL):
     # read a single dataset
     def get_dataset(self, n_data):
         # rec numbers from 0 .. max - 1
-        start_record = 0
+        start_record = 71
         max_records = 3036
 
         records = range(start_record, max_records)        
@@ -211,14 +211,19 @@ class DataETL9B(DataETL):
             save_img = Image.new('1', (64*33, 64*92))
 
         with open(filename, 'rb') as f:
-            for n_rec in records:
-                self.goto_etl_record(f,n_rec,1)
-                for i in range(self.WRITERS):
+            self.goto_etl_record(f,0,1)
+            for i in range(self.WRITERS):
+                # skip hiragana
+                for j in range(71):
+                    r = self.read_record(f)
+                for n_rec in records:
                     # read, paste into img and invert
                     r = self.read_record(f)
                     if i==self.SAVE_WRITER:
                         save_img.paste(r[-1], (64*(n_rec%33), 64*(n_rec//33)))
                     new_img.paste(r[-1], (0, 0))
+                    #if r[1]>=12352 and r[1]<=12447:
+                    #print(n_rec,i,r[1],r[1]>=12352 and r[1]<=12447)
                     iI = Image.eval(new_img, lambda x: not x)
                     # append as numeric data to image X and labels Y
                     outData = np.asarray(iI.getdata(), dtype=np.uint8).reshape(self.WIDTH, self.HEIGHT)                        
@@ -253,7 +258,7 @@ class DataETL9B(DataETL):
 if __name__ == '__main__':
     data = DataETL9B()
     #x_train, x_test, y_train, y_test, input_shape, inv_map  = data.get_data()
-    nb_classes = data.load_data(only_first=True)
+    nb_classes = data.load_data(only_first=False)
     print("classes:",nb_classes)
     print("characters.shape:", data.characters.shape)
     print("labels.shape:", data.labels.shape)
