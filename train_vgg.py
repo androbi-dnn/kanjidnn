@@ -7,7 +7,7 @@ from keras.layers.convolutional import Conv2D
 from keras.layers.convolutional import MaxPooling2D
 from keras.layers.normalization import BatchNormalization
 
-from DataETL import DataETL8B
+from DataETL import DataETL9B
 
 class TrainVgg():
 
@@ -92,6 +92,6 @@ class TrainVgg():
         self.model.load_weights(name)
 
 if __name__ == '__main__':
-    vgg = TrainVgg(DataETL8B())
+    vgg = TrainVgg(DataETL9B())
     vgg.train(epochs=10, batch_size=32, sample_interval=200)
     vgg.save_weights('weights/weights_out.h5')
