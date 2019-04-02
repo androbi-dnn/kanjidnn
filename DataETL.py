@@ -62,7 +62,7 @@ class DataETL(ABC):
     # helper to get test and training sets. call relabel() before to obtain nb_classes
     # This is a memory optimized version of train_test_split which does most I have separated this function as train_test_split runs into memory problems on 8Gb RAM
     # with the 9B dataset.
-    def reshape(self, nb_classes, test_size=0.2, random_state = 42):
+    def shuffle_and_split(self, nb_classes, test_size=0.2, random_state = 42):
         n_size = self.x_train.shape[0]
         assert (n_size == self.y_train.shape[0])
         n_split = int((1.0-test_size)*self.x_train.shape[0])
@@ -167,8 +167,9 @@ class DataETL8B(DataETL):
             self.x_train[lower:upper,0:64,0:64,0],self.y_train[lower:upper,0] = self.get_dataset(i)
 
         nb_classes = self.relabel()
-        data.reshape(nb_classes)
-        return nb_classes
+        self.shuffle_and_split(nb_classes)
+        input_shape = (self.x_train.shape[1], self.x_train.shape[2], 1)
+        return nb_classes, input_shape
 
 # ETL9 binalized data, see http://etlcdb.db.aist.go.jp/?page_id=1711
 class DataETL9B(DataETL):
@@ -252,15 +253,17 @@ class DataETL9B(DataETL):
             print("shape:",self.x_train.shape,self.y_train.shape)
 
         nb_classes = self.relabel()
-        data.reshape(nb_classes)
-        return nb_classes
+        self.shuffle_and_split(nb_classes)
+        input_shape = (self.x_train.shape[1], self.x_train.shape[2], 1)
+        return nb_classes, input_shape
 
 if __name__ == '__main__':
     data = DataETL8B()
-    nb_classes = data.load_data(only_first=False)
+    nb_classes, input_shape = data.load_data(only_first=False)
     print("classes:",nb_classes)
-    print("characters.shape:", data.x_train.shape)
-    print("labels.shape:", data.y_train.shape)
+    print("input_shape:",input_shape)
+    print("x_train.shape:", data.x_train.shape)
+    print("y_train.shape:", data.y_train.shape)
 
     print("training:",data.x_train.shape[0], "testing:", data.x_test.shape[0], "total:",
             data.x_train.shape[0]+data.x_test.shape[0])

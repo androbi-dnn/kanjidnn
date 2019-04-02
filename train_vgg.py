@@ -24,8 +24,7 @@ class TrainVgg():
 
     def load_data(self):
         print ("Loading training and test data ..")
-        nb_classes = self.data.load_data(only_first=self.only_first)
-        self.n_output = nb_classes
+        self.n_output, self.input_shape  = self.data.load_data(only_first=self.only_first)
         print ("Training size: ", self.data.x_train.shape[0])
         print ("Test size: ", self.data.x_test.shape[0])
         print ("Classes: ", self.n_output)
