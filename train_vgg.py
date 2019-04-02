@@ -6,6 +6,7 @@ from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Conv2D
 from keras.layers.convolutional import MaxPooling2D
 from keras.layers.normalization import BatchNormalization
+from keras.callbacks import CSVLogger
 
 from DataETL import DataETL8B
 from DataETL import DataETL9B
@@ -72,9 +73,10 @@ class TrainVgg():
 
     def train(self, epochs=10, batch_size=32, sample_interval=200):
 
+        csv_logger = CSVLogger('log.csv', append=True, separator=';')
         self.model.fit(self.data.x_train, self.data.y_train, epochs=epochs, batch_size=batch_size) 
 
-        score, acc = self.model.evaluate(self.data.x_test, self.data.y_test, batch_size=batch_size, verbose=0)
+        score, acc = self.model.evaluate(self.data.x_test, self.data.y_test, batch_size=batch_size, verbose=0,  callbacks=[csv_logger])
 
         print ("Training size: ", self.data.x_train.shape[0])
         print ("Test size: ", self.data.x_test.shape[0])
@@ -91,5 +93,5 @@ class TrainVgg():
 
 if __name__ == '__main__':
     vgg = TrainVgg(DataETL9B())
-    vgg.train(epochs=1, batch_size=32, sample_interval=200)
+    vgg.train(epochs=10, batch_size=32, sample_interval=200)
     vgg.save_weights('weights/weights_out.h5')
