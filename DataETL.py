@@ -8,6 +8,7 @@ from keras import backend
 from keras.utils import np_utils
 from abc import ABC, abstractmethod
 
+
 # base class that implements some common functions. implement 
 # abstract methods for each type of dataset.
 
@@ -17,8 +18,10 @@ class DataETL(ABC):
     def __init__(self):
         self.WRITERS=0
         self.RECLENGTH=0
-        self.characters = None
-        self.labels = None
+        self.x_train = None
+        self.y_train = None
+        self.x_test = None
+        self.y_test = None
         self.inv_map = None
         super().__init__()
     
@@ -46,50 +49,44 @@ class DataETL(ABC):
         offset =  n * self.WRITERS * self.RECLENGTH + skip*self.RECLENGTH
         f.seek(offset)
 
-    def reshape_for_backend(self, x_train, x_test, y_train, y_test):
-        # reshape to (1, 64, 64) or (64, 64, 1)
-        if backend.image_dim_ordering() == 'th': # theano ordering
-            #print ("use theano ordering")
-            input_shape = (1, x_test.shape[1], x_test.shape[2])
-            x_train = x_train.reshape(
-                (x_train.shape[0], 1, x_train.shape[1], x_train.shape[2]))
-            x_test = x_test.reshape(
-                (x_test.shape[0], 1, x_test.shape[1], x_test.shape[2]))
-        else: # tensorflow
-            #print ("use tensorflow ordering")
-            input_shape = (x_test.shape[1], x_test.shape[2], 1)
-            x_train = x_train.reshape(
-                (x_train.shape[0], x_train.shape[1], x_train.shape[2], 1))
-            x_test = x_test.reshape(
-                (x_test.shape[0], x_test.shape[1], x_test.shape[2], 1))
-        return x_train, x_test, y_train, y_test, input_shape
-
     # relabel from 1..nb_classes
     def relabel(self):
-        unique_labels = list(set(self.labels.flatten()))
+        unique_labels = list(set(self.y_train.flatten()))
         nb_classes = len(unique_labels)
         labels_dict = {unique_labels[i]: i for i in range(len(unique_labels))}
-        # map to permit to recover original label
+        # map that permits to recover original label
         self.inv_map = {v: k for k, v in labels_dict.items()}
-        self.labels = np.array([labels_dict[l] for l in self.labels.flatten()], dtype=np.int32)
+        self.y_train[:,0] = np.array([labels_dict[l] for l in self.y_train.flatten()], dtype=np.uint16)
         return nb_classes
     
     # helper to get test and training sets. call relabel() before to obtain nb_classes
-    # I have separated this function as train_test_split runs into memory problems on 8Gb RAM
+    # This is a memory optimized version of train_test_split which does most I have separated this function as train_test_split runs into memory problems on 8Gb RAM
     # with the 9B dataset.
-    def reshape(self, nb_classes, test_size=0.2):
-        # split
-        x_train, x_test, y_train, y_test = train_test_split(self.characters,
-                self.labels,test_size=test_size,random_state=42)
-       
-        # (:,64,64) -> (:,64,64,1) or (:,1,64,64)
-        x_train, x_test, y_train, y_test, input_shape = self.reshape_for_backend(x_train, 
-                x_test, y_train, y_test)
+    def reshape(self, nb_classes, test_size=0.2, random_state = 42):
+        n_size = self.x_train.shape[0]
+        assert (n_size == self.y_train.shape[0])
+        n_split = int((1.0-test_size)*self.x_train.shape[0])
+        # TODO some sanity tests about split
 
-        # convert class vectors to binary class matrices
-        y_train = np_utils.to_categorical(y_train, nb_classes)
-        y_test = np_utils.to_categorical(y_test, nb_classes)
-        return x_train, x_test, y_train, y_test, input_shape
+        np.random.seed(random_state)
+        self.shuffle_in_unison_scary()
+
+        # split off last part
+        self.x_test = self.x_train[n_split:n_size,:,:,:]
+        self.y_test = self.y_train[n_split:n_size,:]
+
+        # resize first part
+        self.x_train.resize([n_split,64,64,1],refcheck=False)
+        self.y_train.resize([n_split,1],refcheck=False)
+        
+        return
+
+    # see https://stackoverflow.com/questions/4601373/better-way-to-shuffle-two-numpy-arrays-in-unison
+    def shuffle_in_unison_scary(self):
+        rng_state = np.random.get_state()
+        np.random.shuffle(self.x_train)
+        np.random.set_state(rng_state)
+        np.random.shuffle(self.y_train)
 
 # ETL8 binalized data, see http://etlcdb.db.aist.go.jp/?page_id=2461
 # we skip hiragana, so we have 881 kanji from 160 different writers
@@ -153,7 +150,7 @@ class DataETL8B(DataETL):
             iI.save(fn, 'PNG')
         return np.asarray(X, dtype=np.uint8), np.asarray(Y, dtype=np.uint16)
 
-    # read all sets (or only_first) into self.characters and self.labels
+    # read all sets (or only_first) into self.x_train and self.y_train
     def load_data(self, test_size=0.2, only_first=False):
         num_chars=[320-75,320,316]
         n_sets = self.NUM_DATASETS+1
@@ -161,15 +158,17 @@ class DataETL8B(DataETL):
             n_sets = 2
             num_chars=num_chars[0:1]
         # allocate characters and labels
-        self.characters = np.empty([sum(num_chars)*self.WRITERS, 64, 64], dtype=np.uint8)
-        self.labels = np.empty([sum(num_chars)*self.WRITERS, 1], dtype=np.uint16)
+        self.x_train = np.empty([sum(num_chars)*self.WRITERS, 64, 64, 1], dtype=np.uint8)
+        self.y_train = np.empty([sum(num_chars)*self.WRITERS, 1], dtype=np.uint16)
         # read sets
         for i in range(1, n_sets):
             lower = sum(num_chars[0:i-1])*self.WRITERS
             upper = sum(num_chars[0:i])*self.WRITERS
-            self.characters[lower:upper,0:64,0:64],self.labels[lower:upper,0] = self.get_dataset(i)
+            self.x_train[lower:upper,0:64,0:64,0],self.y_train[lower:upper,0] = self.get_dataset(i)
 
-        return self.relabel()
+        nb_classes = self.relabel()
+        data.reshape(nb_classes)
+        return nb_classes
 
 # ETL9 binalized data, see http://etlcdb.db.aist.go.jp/?page_id=1711
 class DataETL9B(DataETL):
@@ -243,30 +242,25 @@ class DataETL9B(DataETL):
             n_sets = 2
         # characters has a size of 2.4 Gb. Allocate now and don't copy around
         size = self.NUM_CHARS*self.WRITERS*(n_sets-1)
-        self.characters = np.empty([size, 64, 64], dtype=np.uint8)
-        self.labels = np.empty([size, 1], dtype=np.uint16)
+        self.x_train = np.empty([size, 64, 64, 1], dtype=np.uint8)
+        self.y_train = np.empty([size, 1], dtype=np.uint16)
         for i in range(1, n_sets):
             lower = (i-1)*self.NUM_CHARS*self.WRITERS
             upper = (i)*self.NUM_CHARS*self.WRITERS
-            self.characters[lower:upper,0:64,0:64],self.labels[lower:upper,0] = self.get_dataset(i)
-            print("size:",self.characters.nbytes/1048576,self.labels.nbytes/1048576)
-            print("shape:",self.characters.shape,self.labels.shape)
+            self.x_train[lower:upper,0:64,0:64,0],self.y_train[lower:upper,0] = self.get_dataset(i)
+            print("size:",self.x_train.nbytes/1048576,self.y_train.nbytes/1048576)
+            print("shape:",self.x_train.shape,self.y_train.shape)
 
-        #return self.reshape_relabel(characters, labels, test_size)
-        return self.relabel()
+        nb_classes = self.relabel()
+        data.reshape(nb_classes)
+        return nb_classes
 
 if __name__ == '__main__':
-    data = DataETL9B()
-    #x_train, x_test, y_train, y_test, input_shape, inv_map  = data.get_data()
+    data = DataETL8B()
     nb_classes = data.load_data(only_first=False)
     print("classes:",nb_classes)
-    print("characters.shape:", data.characters.shape)
-    print("labels.shape:", data.labels.shape)
-    print(data.labels)
+    print("characters.shape:", data.x_train.shape)
+    print("labels.shape:", data.y_train.shape)
 
-    x_train, x_test, y_train, y_test, input_shape = data.reshape(nb_classes)
-    print("training:",x_train.shape[0], "testing:", x_test.shape[0], "total:",x_train.shape[0]+x_test.shape[0])
-
-    print("input_shape", input_shape)
-    print("training:",x_train.shape[0], "testing:", x_test.shape[0], "total:",x_train.shape[0]+x_test.shape[0])
-
+    print("training:",data.x_train.shape[0], "testing:", data.x_test.shape[0], "total:",
+            data.x_train.shape[0]+data.x_test.shape[0])
