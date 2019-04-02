@@ -7,6 +7,7 @@ from keras.layers.convolutional import Conv2D
 from keras.layers.convolutional import MaxPooling2D
 from keras.layers.normalization import BatchNormalization
 
+from DataETL import DataETL8B
 from DataETL import DataETL9B
 
 class TrainVgg():
