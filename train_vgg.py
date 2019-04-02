@@ -90,6 +90,6 @@ class TrainVgg():
         self.model.load_weights(name)
 
 if __name__ == '__main__':
-    vgg = TrainVgg(DataETL8B())
-    vgg.train(epochs=10, batch_size=32, sample_interval=200)
+    vgg = TrainVgg(DataETL9B())
+    vgg.train(epochs=1, batch_size=32, sample_interval=200)
     vgg.save_weights('weights/weights_out.h5')
