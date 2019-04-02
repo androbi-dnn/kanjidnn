@@ -74,9 +74,9 @@ class TrainVgg():
     def train(self, epochs=10, batch_size=32, sample_interval=200):
 
         csv_logger = CSVLogger('log.csv', append=True, separator=';')
-        self.model.fit(self.data.x_train, self.data.y_train, epochs=epochs, batch_size=batch_size) 
+        self.model.fit(self.data.x_train, self.data.y_train, epochs=epochs, batch_size=batch_size,  callbacks=[csv_logger]) 
 
-        score, acc = self.model.evaluate(self.data.x_test, self.data.y_test, batch_size=batch_size, verbose=0,  callbacks=[csv_logger])
+        score, acc = self.model.evaluate(self.data.x_test, self.data.y_test, batch_size=batch_size, verbose=0)
 
         print ("Training size: ", self.data.x_train.shape[0])
         print ("Test size: ", self.data.x_test.shape[0])
