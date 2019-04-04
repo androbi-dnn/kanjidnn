@@ -4,13 +4,8 @@ import os
 from keras.optimizers import Adam 
 from keras.callbacks import CSVLogger
 
-from keras import initializers
-from keras import backend
-from keras import layers
-from keras import models
-
-from dataetl import DataETL8B, DataETL9B
-from modelbag import ModelBag
+#import dataetl
+#from kanjidnn import ModelBag
 
 class DNNTool():
 
@@ -31,7 +26,7 @@ class DNNTool():
     def set_model(self, model):
         self.model = model
 
-    def set_data(self, data):
+    def set_data_source(self, data):
         self.data = data
 
     def compile(self):
@@ -40,6 +35,9 @@ class DNNTool():
         self.model_compiled = True
 
     def load_data(self,only_first=False):
+        if self.data is None:
+            print("Error: data source has not been set. Use set_data_source() to specify data source.")
+            return
         print ("Loading training and test data ..")
         self.n_output, self.input_shape  = self.data.load_data(only_first=only_first)
         self.data_loaded = True
@@ -47,7 +45,7 @@ class DNNTool():
     def info(self):
         print("------- Info --------")
         if self.data is not None:
-            print("Data type:",type(self.data).__name__)
+            print("Data source:",type(self.data).__name__)
             if self.data_loaded:
                 print ("Training size: ", self.data.x_train.shape[0])
                 print ("Test size    : ", self.data.x_test.shape[0])
@@ -55,7 +53,7 @@ class DNNTool():
             else:
                 print("Data not loaded.")
         else:
-            print("Data type not set.")
+            print("Data source not set.")
         
         if self.model is not None:
             print("Model type:",self.model.name)
@@ -83,11 +81,11 @@ class DNNTool():
 
 if __name__ == '__main__':
     dnn = DNNTool()
-    dnn.set_data(DataETL8B())
-    dnn.load_data(only_first=True)
-    bag = ModelBag()
-    dnn.set_model(bag.mobile_net_64(classes = dnn.n_output, input_shape = dnn.input_shape))
+    #dnn.set_data_source(DataETL8B())
+    #dnn.load_data(only_first=True)
+    #bag = ModelBag()
+    #dnn.set_model(bag.mobile_net_64(classes = dnn.n_output, input_shape = dnn.input_shape))
     dnn.info()
-    dnn.compile()
-    dnn.train(epochs=1, batch_size=32, logger_fn='log.csv')
+    #dnn.compile()
+    #dnn.train(epochs=1, batch_size=32, logger_fn='log.csv')
     #dnn.save_weights('gdrive/My Drive/Data/Vgg/weights_etl9b_10.h5')

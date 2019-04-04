@@ -98,7 +98,11 @@ class DataETL(ABC):
 class DataETL8B(DataETL):
     def __init__(self):
         super().__init__()
-        self.DATASET_PREFIX = self.ETL_PATH + '/ETL8B/ETL8B2C'
+        self.DATASET_DIR = self.ETL_PATH + '/ETL8B'
+        self.DATASET_PREFIX = 'ETL8B2C'
+        if not os.path.isdir(self.DATASET_DIR):
+            print('Warning: directory',self.DATASET_DIR,'does not exist. Set DATASET_DIR')
+
         self.WIDTH = 64
         self.HEIGHT = 64
         self.RECLENGTH = 512
@@ -126,17 +130,13 @@ class DataETL8B(DataETL):
         records = range(start_record, max_records)
 
         new_img = Image.new('1', (self.WIDTH, self.HEIGHT))
-        filename = self.DATASET_PREFIX + str(n_data)
+        filename = self.DATASET_DIR + '/' + self.DATASET_PREFIX + str(n_data)
         print("reading",filename)
 
         X = []
         Y = []
         if self.SAVE_WRITER >= 0:
             save_img = Image.new('1', (64*18, 64*18))
-
-        if not self.check_if_file_exists(filename):
-            print("file",filename,"not found.")
-            return np.asarray(X, dtype=np.uint8), np.asarray(Y, dtype=np.uint16)
 
         with open(filename, 'rb') as f:
             for n_rec in records:
@@ -170,10 +170,14 @@ class DataETL8B(DataETL):
         self.x_train = np.empty([sum(num_chars)*self.WRITERS, 64, 64, 1], dtype=np.uint8)
         self.y_train = np.empty([sum(num_chars)*self.WRITERS, 1], dtype=np.uint16)
         # read sets
-        for i in range(1, n_sets):
-            lower = sum(num_chars[0:i-1])*self.WRITERS
-            upper = sum(num_chars[0:i])*self.WRITERS
-            self.x_train[lower:upper,0:64,0:64,0],self.y_train[lower:upper,0] = self.get_dataset(i)
+        try:
+            for i in range(1, n_sets):
+                lower = sum(num_chars[0:i-1])*self.WRITERS
+                upper = sum(num_chars[0:i])*self.WRITERS
+                self.x_train[lower:upper,0:64,0:64,0],self.y_train[lower:upper,0] = self.get_dataset(i)
+        except FileNotFoundError as not_found:
+            print('Error: File ',not_found.filename,'not found')
+            return None, None
 
         nb_classes = self.relabel()
         self.shuffle_and_split(nb_classes)
