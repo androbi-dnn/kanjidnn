@@ -44,26 +44,28 @@ class DNNTool():
         self.model.compile(loss='sparse_categorical_crossentropy', optimizer=self.opt, metrics=['accuracy'])
         self.model_compiled = True
 
-    def load_data(self):
+    def load_data(self,only_first=False):
         print ("Loading training and test data ..")
-        self.n_output, self.input_shape  = self.data.load_data(only_first=self.only_first)
+        self.n_output, self.input_shape  = self.data.load_data(only_first=only_first)
         print ("Training size: ", self.data.x_train.shape[0])
         print ("Test size: ", self.data.x_test.shape[0])
         print ("Classes: ", self.n_output)
         self.data_loaded = True
     
     def info(self):
-        if self.data not None:
+        if self.data is not None:
             print("Data type set:",type(self.data).__name__)
             if self.data_loaded:
                 print("Data loaded.")
                 print ("Training size: ", self.data.x_train.shape[0])
                 print ("Test size: ", self.data.x_test.shape[0])
                 print ("Classes: ", self.n_output)
+            else:
+                print("Data not loaded.")
         else:
             print("Data type not set.")
         
-        if self.model not None:
+        if self.model is not None:
             print("Model type set:",type(self.model).__name__)
             self.model.summary()
         else:
@@ -89,10 +91,13 @@ class DNNTool():
         self.model.load_weights(name)
 
 if __name__ == '__main__':
-    dnn = DnnTool()
+    dnn = DNNTool()
     dnn.set_data(DataETL9B())
+    #dnn.load_data(only_first=True)
+    dnn.info()
     bag = ModelBag()
-    dnn.set_model(bag.mobile_net_64(classes = self.n_output, input_shape = self.input_shape))
-    dnn.prepare()
-    dnn.train(epochs=10, batch_size=32, sample_interval=200)
-    dnn.save_weights('gdrive/My Drive/Data/Vgg/weights_etl9b_10.h5')
+    dnn.set_model(bag.mobile_net_64(classes = dnn.n_output, input_shape = dnn.input_shape))
+    dnn.info()
+    #dnn.prepare()
+    #dnn.train(epochs=10, batch_size=32, sample_interval=200)
+    #dnn.save_weights('gdrive/My Drive/Data/Vgg/weights_etl9b_10.h5')

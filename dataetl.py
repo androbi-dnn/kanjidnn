@@ -1,5 +1,5 @@
 import numpy as np
-import sys
+import os, sys
 import struct
 from PIL import Image
 from sklearn.utils import shuffle
@@ -14,8 +14,8 @@ from abc import ABC, abstractmethod
 
 class DataETL(ABC):
 
-    ETL_PATH = 'ETLC'
-    def __init__(self):
+    def __init__(self,etl_path='ETLC'):
+        self.ETL_PATH = etl_path
         self.WRITERS=0
         self.RECLENGTH=0
         self.x_train = None
@@ -35,7 +35,7 @@ class DataETL(ABC):
     def load_data(self, test_size=0.2):
         pass
 
-    # helper function to read a record
+    # helper function to read a record given a format for record structure
     def read_etl_record(self, format, width, height, f):
         s = f.read(self.RECLENGTH)
         r = struct.unpack(format, s)
@@ -49,25 +49,25 @@ class DataETL(ABC):
         offset =  n * self.WRITERS * self.RECLENGTH + skip*self.RECLENGTH
         f.seek(offset)
 
-    # relabel from 1..nb_classes
+    # relabel y_train from uint16 -> 1..nb_classes
     def relabel(self):
         unique_labels = list(set(self.y_train.flatten()))
         nb_classes = len(unique_labels)
         labels_dict = {unique_labels[i]: i for i in range(len(unique_labels))}
-        # map that permits to recover original label
+        # store a map that permits to recover original label
         self.inv_map = {v: k for k, v in labels_dict.items()}
         self.y_train[:,0] = np.array([labels_dict[l] for l in self.y_train.flatten()], dtype=np.uint16)
         return nb_classes
     
-    # helper to get test and training sets. call relabel() before to obtain nb_classes
-    # This is a memory optimized version of train_test_split which does most I have separated this function as train_test_split runs into memory problems on 8Gb RAM
-    # with the 9B dataset.
+    # helper to get test and training sets. Call relabel() before to obtain nb_classes
+    # This is a memory optimized version of train_test_split that was necessary for 
+    # the ETL 9B dataset on smaller RAM machines.
     def shuffle_and_split(self, nb_classes, test_size=0.2, random_state = 42):
         n_size = self.x_train.shape[0]
         assert (n_size == self.y_train.shape[0])
+        # TODO add some sanity tests about n_split/test_size
         n_split = int((1.0-test_size)*self.x_train.shape[0])
-        # TODO some sanity tests about split
-
+        
         np.random.seed(random_state)
         self.shuffle_in_unison_scary()
 
@@ -87,6 +87,11 @@ class DataETL(ABC):
         np.random.shuffle(self.x_train)
         np.random.set_state(rng_state)
         np.random.shuffle(self.y_train)
+
+    def check_if_file_exists(self, filename):
+        exists = os.path.isfile(filename)
+        return exists
+
 
 # ETL8 binalized data, see http://etlcdb.db.aist.go.jp/?page_id=2461
 # we skip hiragana, so we have 881 kanji from 160 different writers
@@ -128,6 +133,10 @@ class DataETL8B(DataETL):
         Y = []
         if self.SAVE_WRITER >= 0:
             save_img = Image.new('1', (64*18, 64*18))
+
+        if not self.check_if_file_exists(filename):
+            print("file",filename,"not found.")
+            return np.asarray(X, dtype=np.uint8), np.asarray(Y, dtype=np.uint16)
 
         with open(filename, 'rb') as f:
             for n_rec in records:
@@ -210,6 +219,10 @@ class DataETL9B(DataETL):
         if self.SAVE_WRITER >= 0:
             save_img = Image.new('1', (64*33, 64*92))
 
+        if not self.check_if_file_exists(filename):
+            print("file",filename,"not found.")
+            return np.asarray(X, dtype=np.uint8), np.asarray(Y, dtype=np.uint16)
+
         with open(filename, 'rb') as f:
             self.goto_etl_record(f,0,1)
             for i in range(self.WRITERS):
@@ -258,12 +271,12 @@ class DataETL9B(DataETL):
         return nb_classes, input_shape
 
 if __name__ == '__main__':
+    # typical usage:
     data = DataETL8B()
     nb_classes, input_shape = data.load_data(only_first=False)
     print("classes:",nb_classes)
     print("input_shape:",input_shape)
     print("x_train.shape:", data.x_train.shape)
     print("y_train.shape:", data.y_train.shape)
-
     print("training:",data.x_train.shape[0], "testing:", data.x_test.shape[0], "total:",
             data.x_train.shape[0]+data.x_test.shape[0])
