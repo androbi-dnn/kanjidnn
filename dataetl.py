@@ -262,8 +262,6 @@ class DataETL9B(DataETL):
             lower = (i-1)*self.NUM_CHARS*self.WRITERS
             upper = (i)*self.NUM_CHARS*self.WRITERS
             self.x_train[lower:upper,0:64,0:64,0],self.y_train[lower:upper,0] = self.get_dataset(i)
-            print("size:",self.x_train.nbytes/1048576,self.y_train.nbytes/1048576)
-            print("shape:",self.x_train.shape,self.y_train.shape)
 
         nb_classes = self.relabel()
         self.shuffle_and_split(nb_classes)

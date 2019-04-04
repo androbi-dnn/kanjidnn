@@ -95,7 +95,7 @@ class ModelBag():
         x = layers.Activation('softmax', name='act_softmax')(x)
         x = layers.Reshape((classes,), name='reshape_2')(x)
 
-        model = models.Model(img_input, x, name='mobilenet')
+        model = models.Model(img_input, x, name='mobilenet_64')
         return model
 
     def _conv_block(self, inputs, filters, kernel=(3, 3), strides=(1, 1), kernel_initializer = None):
@@ -145,7 +145,7 @@ class ModelBag():
 
 
     def vgg_m7_1_9(self, input_shape=None, classes=1000):
-        model = Sequential()
+        model = Sequential( name='vgg_m7_1_9')
 
         model.add(Conv2D(64, (3, 3), padding='same',
                         input_shape=input_shape, kernel_initializer='he_normal'))
