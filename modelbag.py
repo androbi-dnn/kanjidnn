@@ -142,9 +142,12 @@ class ModelBag():
         x = layers.BatchNormalization(axis=channel_axis,
                                     name='conv_pw_%d_bn' % block_id)(x)
         return layers.ReLU(6., name='conv_pw_%d_relu' % block_id)(x)
-
-
+ 
     def vgg_m7_1_9(self, input_shape=None, classes=1000):
+        """This is the second "M7_1" that appears in Charlie Tsai's 
+        https://github.com/charlietsai/japanese-handwriting-nn/blob/master/models/vgg_models.py
+        which corresponds to M9 in Table 1 of the paper.
+        """
         model = Sequential( name='vgg_m7_1_9')
 
         model.add(Conv2D(64, (3, 3), padding='same',
@@ -181,6 +184,58 @@ class ModelBag():
         model.add(Dense(4096, activation="relu", kernel_initializer='he_normal'))
         model.add(Dropout(0.5))
 
+        model.add(Dense(classes, activation="softmax"))
+
+        return model
+
+    def M16_drop(self, input_shape=None, classes=1000):
+
+        model = Sequential()
+        model.add(Conv2D(64, (3, 3), activation="relu",
+                        name='conv1_1', input_shape=input_shape))
+        model.add(Conv2D(64, (3, 3), padding="same",
+                        activation='relu', name='conv1_2'))
+        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        model.add(Dropout(0.5))
+
+        model.add(Conv2D(128, (3, 3), padding="same",
+                        activation='relu', name='conv2_1'))
+        model.add(Conv2D(128, (3, 3), padding="same",
+                        activation='relu', name='conv2_2'))
+        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        model.add(Dropout(0.5))
+
+        model.add(Conv2D(256, (3, 3), padding="same",
+                        activation='relu', name='conv3_1'))
+        model.add(Conv2D(256, (3, 3), padding="same",
+                        activation='relu', name='conv3_2'))
+        model.add(Conv2D(256, (3, 3), padding="same",
+                        activation='relu', name='conv3_3'))
+        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        model.add(Dropout(0.5))
+
+        model.add(Conv2D(512, (3, 3), padding="same",
+                        activation='relu', name='conv4_1'))
+        model.add(Conv2D(512, (3, 3), padding="same",
+                        activation='relu', name='conv4_2'))
+        model.add(Conv2D(512, (3, 3), padding="same",
+                        activation='relu', name='conv4_3'))
+        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+
+        model.add(Conv2D(512, (3, 3), padding="same",
+                        activation='relu', name='conv5_1'))
+        model.add(Conv2D(512, (3, 3), padding="same",
+                        activation='relu', name='conv5_2'))
+        model.add(Conv2D(512, (3, 3), padding="same",
+                        activation='relu', name='conv5_3'))
+        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        model.add(Dropout(0.5))
+
+        model.add(Flatten())
+        model.add(Dense(4096, activation="relu"))
+        model.add(Dropout(0.5))
+        model.add(Dense(4096, activation="relu"))
+        model.add(Dropout(0.5))
         model.add(Dense(classes, activation="softmax"))
 
         return model
