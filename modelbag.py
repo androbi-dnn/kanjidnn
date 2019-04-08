@@ -215,9 +215,11 @@ class ModelBag():
 
         model = Sequential()
         # IN: 64x64x1
-        model.add(Conv2D(64, (3, 3), activation="relu", name='conv1_1', input_shape=input_shape, kernel_initializer='he_normal'))
+        model.add(Conv2D(64, (3, 3), input_shape=input_shape, padding='same', activation="relu", 
+            name='conv1_1', kernel_initializer='he_normal'))
         # IN: 64x64x64
-        model.add(Conv2D(64, (3, 3), padding="same", activation='relu', kernel_initializer='he_normal', name='conv1_2'))
+        model.add(Conv2D(64, (3, 3), padding="same", activation='relu', 
+            kernel_initializer='he_normal', name='conv1_2'))
         
         model.add(MaxPooling2D((2, 2), strides=(2, 2)))
         model.add(Dropout(0.25))
