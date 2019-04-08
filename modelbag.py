@@ -192,49 +192,49 @@ class ModelBag():
 
         model = Sequential()
         model.add(Conv2D(64, (3, 3), activation="relu",
-                        name='conv1_1', input_shape=input_shape))
+                        name='conv1_1', input_shape=input_shape, kernel_initializer='he_normal'))
         model.add(Conv2D(64, (3, 3), padding="same",
-                        activation='relu', name='conv1_2'))
+                        activation='relu', kernel_initializer='he_normal', name='conv1_2'))
         model.add(MaxPooling2D((2, 2), strides=(2, 2)))
         model.add(Dropout(0.5))
 
         model.add(Conv2D(128, (3, 3), padding="same",
-                        activation='relu', name='conv2_1'))
+                        activation='relu', kernel_initializer='he_normal', name='conv2_1'))
         model.add(Conv2D(128, (3, 3), padding="same",
-                        activation='relu', name='conv2_2'))
+                        activation='relu', kernel_initializer='he_normal', name='conv2_2'))
         model.add(MaxPooling2D((2, 2), strides=(2, 2)))
         model.add(Dropout(0.5))
 
         model.add(Conv2D(256, (3, 3), padding="same",
-                        activation='relu', name='conv3_1'))
+                        activation='relu', kernel_initializer='he_normal', name='conv3_1'))
         model.add(Conv2D(256, (3, 3), padding="same",
-                        activation='relu', name='conv3_2'))
+                        activation='relu', kernel_initializer='he_normal', name='conv3_2'))
         model.add(Conv2D(256, (3, 3), padding="same",
-                        activation='relu', name='conv3_3'))
+                        activation='relu', kernel_initializer='he_normal', name='conv3_3'))
         model.add(MaxPooling2D((2, 2), strides=(2, 2)))
         model.add(Dropout(0.5))
 
         model.add(Conv2D(512, (3, 3), padding="same",
-                        activation='relu', name='conv4_1'))
+                        activation='relu', kernel_initializer='he_normal', name='conv4_1'))
         model.add(Conv2D(512, (3, 3), padding="same",
-                        activation='relu', name='conv4_2'))
+                        activation='relu', kernel_initializer='he_normal', name='conv4_2'))
         model.add(Conv2D(512, (3, 3), padding="same",
-                        activation='relu', name='conv4_3'))
+                        activation='relu', kernel_initializer='he_normal', name='conv4_3'))
         model.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
         model.add(Conv2D(512, (3, 3), padding="same",
-                        activation='relu', name='conv5_1'))
+                        activation='relu', kernel_initializer='he_normal', name='conv5_1'))
         model.add(Conv2D(512, (3, 3), padding="same",
-                        activation='relu', name='conv5_2'))
+                        activation='relu', kernel_initializer='he_normal', name='conv5_2'))
         model.add(Conv2D(512, (3, 3), padding="same",
-                        activation='relu', name='conv5_3'))
+                        activation='relu', kernel_initializer='he_normal', name='conv5_3'))
         model.add(MaxPooling2D((2, 2), strides=(2, 2)))
         model.add(Dropout(0.5))
 
         model.add(Flatten())
-        model.add(Dense(4096, activation="relu"))
+        model.add(Dense(4096, activation="relu", kernel_initializer='he_normal'))
         model.add(Dropout(0.5))
-        model.add(Dense(4096, activation="relu"))
+        model.add(Dense(4096, activation="relu", kernel_initializer='he_normal'))
         model.add(Dropout(0.5))
         model.add(Dense(classes, activation="softmax"))
 
