@@ -79,6 +79,16 @@ class DNNTool():
     def load_model_weights(self, name):
         self.model.load_weights(name)
 
+    def get_flops(model):
+        run_meta = tf.RunMetadata()
+        opts = tf.profiler.ProfileOptionBuilder.float_operation()
+
+        # We use the Keras session graph in the call to the profiler.
+        flops = tf.profiler.profile(graph=K.get_session().graph,
+                                    run_meta=run_meta, cmd='op', options=opts)
+
+        return flops.total_float_ops  # Prints the "flops" of the model.
+
 if __name__ == '__main__':
     dnn = DNNTool()
     #dnn.set_data_source(DataETL8B())

@@ -60,25 +60,35 @@ class ModelBag():
 
         init = initializers.TruncatedNormal(stddev=0.09)
 
+        # INPUT: 64 x 64 x 1 MACC: 3*3*1*64*64*32 = 1.179.648
         x = self._conv_block(img_input, 32, strides=(1, 1), kernel_initializer = init) # strides=(2, 2)
+        # INPUT: 64 x 64 x 32 MACC: Cin*H*W*(9+1*filters) = 32*64*64*73 = 9.568.256
         x = self._depthwise_conv_block(x, 64, depth_multiplier, block_id=1, kernel_initializer = init)
-    
-        x = self._depthwise_conv_block(x, 128, depth_multiplier, strides=(1, 1), block_id=2, kernel_initializer = init) # strides=(2, 2)
+        # INPUT: 64 x 64 x 64 MACC: Cin*H*W*(9+1*filters)  = 64*64*64*137 = 35.913.728
+        x = self._depthwise_conv_block(x, 128, depth_multiplier, block_id=2, kernel_initializer = init) # strides=(2, 2)
+        # INPUT: 64 x 64 x 128 MACC: Cin*H*W*(9+1*filters)  = 128*64*64*137 = 35.913.728
         x = self._depthwise_conv_block(x, 128, depth_multiplier, block_id=3, kernel_initializer = init)
-
+        # INPUT: 64 x 64 x 128 MACC: Cin*H*W*(9+1*filters)  = 128*64*64*265/4 = 34.734.080
         x = self._depthwise_conv_block(x, 256, depth_multiplier, strides=(2, 2), block_id=4, kernel_initializer = init)
+        # INPUT: 32 x 32 x 256 MACC: Cin*H*W*(9+1*filters)  = 256*32*32*265 = 69.468.160
         x = self._depthwise_conv_block(x, 256, depth_multiplier, block_id=5, kernel_initializer = init)
-
+        # INPUT: 32 x 32 x 256 MACC: Cin*H*W*(9+1*filters)  = 256*32*32*521/4 = 34.144.256
         x = self._depthwise_conv_block(x, 512, depth_multiplier, strides=(2, 2), block_id=6, kernel_initializer = init)
+        # INPUT: 16 x 16 x 512 MACC: Cin*H*W*(9+1*filters)  = 512*16*16*521 = 68.288.512
         x = self._depthwise_conv_block(x, 512, depth_multiplier, block_id=7, kernel_initializer = init)
+        # INPUT: 16 x 16 x 512 MACC: Cin*H*W*(9+1*filters)  = 512*16*16*521 = 68.288.512
         x = self._depthwise_conv_block(x, 512, depth_multiplier, block_id=8, kernel_initializer = init)
+        # INPUT: 16 x 16 x 512 MACC: Cin*H*W*(9+1*filters)  = 512*16*16*521 = 68.288.512
         x = self._depthwise_conv_block(x, 512, depth_multiplier, block_id=9, kernel_initializer = init)
+        # INPUT: 16 x 16 x 512 MACC: Cin*H*W*(9+1*filters)  = 512*16*16*521 = 68.288.512
         x = self._depthwise_conv_block(x, 512, depth_multiplier, block_id=10, kernel_initializer = init)
+        # INPUT: 16 x 16 x 512 MACC: Cin*H*W*(9+1*filters)  = 512*16*16*521 = 68.288.512
         x = self._depthwise_conv_block(x, 512, depth_multiplier, block_id=11, kernel_initializer = init)
-
+        # INPUT: 16 x 16 x 512 MACC: Cin*H*W*(9+1*filters)  = 512*16*16*1033/4 = 33.849.344
         x = self._depthwise_conv_block(x, 1024, depth_multiplier, strides=(2, 2), block_id=12, kernel_initializer = init)
+        # INPUT: 8 x 8 x 1024 MACC: Cin*H*W*(9+1*filters)  = 1024*8*8*1033 = 67.698.688
         x = self._depthwise_conv_block(x, 1024, depth_multiplier, block_id=13, kernel_initializer = init)
-
+        # OUTPUT: 8 x 8 x 1024
 
         if backend.image_data_format() == 'channels_first':
             shape = (1024, 1, 1)
@@ -86,20 +96,23 @@ class ModelBag():
             shape = (1, 1, 1024)
 
         x = layers.GlobalAveragePooling2D()(x)
+        # OUTPUT: 1 x 1 x 1024
         x = layers.Reshape(shape, name='reshape_1')(x)
         x = layers.Dropout(dropout, name='dropout')(x)
+        # MACC: 1024 * classes = 1024*2965 = 3036160
         x = layers.Conv2D(classes, (1, 1),
                             padding='same',
                             kernel_initializer = init,
                             name='conv_preds')(x)
         x = layers.Activation('softmax', name='act_softmax')(x)
         x = layers.Reshape((classes,), name='reshape_2')(x)
-
+        # total: 1179648+9568256+35913728*2+34734080+69468160+34144256+68288512*5+33849344+67698688+3036160=666.948.608
         model = models.Model(img_input, x, name='mobilenet_64')
         return model
 
     def _conv_block(self, inputs, filters, kernel=(3, 3), strides=(1, 1), kernel_initializer = None):
-
+        # MACC: K × K × Cin × H × W × Cout
+        # 3*3*inputs.Cin*inputs.H*inputs.W*filters
         channel_axis = 1 if backend.image_data_format() == 'channels_first' else -1
         x = layers.ZeroPadding2D(padding=((1, 1), (1, 1)), name='conv1_pad')(inputs) # ((0, 1), (0, 1))
         x = layers.Conv2D(filters, kernel,
@@ -114,7 +127,6 @@ class ModelBag():
     def _depthwise_conv_block(self, inputs, pointwise_conv_filters,
                             depth_multiplier=1, strides=(1, 1), block_id=1, kernel_initializer = None):
         """Adds a depthwise convolution block."""
-
         channel_axis = 1 if backend.image_data_format() == 'channels_first' else -1
 
         if strides == (1, 1):
@@ -122,6 +134,8 @@ class ModelBag():
         else:
             x = layers.ZeroPadding2D(((0, 1), (0, 1)),
                                     name='conv_pad_%d' % block_id)(inputs)
+        # MACC: K × K × C × Hout × Wout
+        #  3*3*inputs.Cin*inputs.H*inputs.W;  if strides=(2,2)  H/=2, W/=2 -> total/4
         x = layers.DepthwiseConv2D((3, 3),
                                 padding='same' if strides == (1, 1) else 'valid',
                                 depth_multiplier=depth_multiplier,
@@ -133,6 +147,8 @@ class ModelBag():
             axis=channel_axis, name='conv_dw_%d_bn' % block_id)(x)
         x = layers.ReLU(6., name='conv_dw_%d_relu' % block_id)(x)
 
+        # MACC: K × K × Cin × H × W × Cout
+        # 1*1*inputs.Cin*inputs.H*inputs.W*filters; if strides=(2,2) H/=2, W/=2 -> total/4
         x = layers.Conv2D(pointwise_conv_filters, (1, 1),
                         padding='same',
                         use_bias=False,
@@ -141,6 +157,7 @@ class ModelBag():
                         name='conv_pw_%d' % block_id)(x)
         x = layers.BatchNormalization(axis=channel_axis,
                                     name='conv_pw_%d_bn' % block_id)(x)
+        # MACC total: inputs.Cin*inputs.H*inputs.W*(9+1*filters)    (/4 if strides=(2,2))
         return layers.ReLU(6., name='conv_pw_%d_relu' % block_id)(x)
  
     def vgg_m7_1_9(self, input_shape=None, classes=1000):
@@ -150,42 +167,50 @@ class ModelBag():
         """
         model = Sequential( name='vgg_m7_1_9')
 
+        # K × K × Cin × Hout × Wout × Cout
+        # MACC: 3*3*1*64*64*64 = 2.359.296
         model.add(Conv2D(64, (3, 3), padding='same',
                         input_shape=input_shape, kernel_initializer='he_normal'))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
 
+        # MACC: 3*3*64*32*32*128 = 75.497.472
         model.add(Conv2D(128, (3, 3), padding='same',
                         kernel_initializer='he_normal'))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
 
+        # MACC: 3*3*128*16*16*256 = 75.497.472
         model.add(Conv2D(256, (3, 3), padding='same', kernel_initializer='he_normal'))
         model.add(Activation('relu'))
+        # MACC: 3*3*256*16*16*256 = 150.994.944
         model.add(Conv2D(256, (3, 3), padding='same', kernel_initializer='he_normal'))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
 
+        # MACC: 3*3*256*8*8*512 = 75.497.472
         model.add(Conv2D(512, (3, 3), padding='same',
                         kernel_initializer='he_normal'))
         model.add(Activation('relu'))
+        # MACC: 3*3*512*8*8*512 = 150.994.944
         model.add(Conv2D(512, (3, 3), padding='same',
                         kernel_initializer='he_normal'))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
-
+        # output is 4*4*512 = 7680, MACC: 7680*4096 = 31.457.280
         model.add(Flatten())
         model.add(Dense(4096, activation="relu", kernel_initializer='he_normal'))
         model.add(Dropout(0.5))
-
+        # MACC: 4096*4096 = 16.777.216
         model.add(Dense(4096, activation="relu", kernel_initializer='he_normal'))
         model.add(Dropout(0.5))
-
+        # MACC: 4096*classes = 4096*2965 = 12.144.640 (dataset 9B)
         model.add(Dense(classes, activation="softmax"))
 
+        # MACC total: 2359296+75497472*7+31457280+16777216+12144640=591.220.736
         return model
 
     def M16_drop(self, input_shape=None, classes=1000):
