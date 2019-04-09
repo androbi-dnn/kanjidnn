@@ -57,6 +57,7 @@ class DNNTool():
         
         if self.model is not None:
             print("Model type:",self.model.name)
+            self.model.summary()
         else:
             print("Model type not set.")
 
