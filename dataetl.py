@@ -13,7 +13,7 @@ from abc import ABC, abstractmethod
 # abstract methods for each type of dataset.
 
 class DataETL(ABC):
-
+    """Abstract ETL data source base class."""
     def __init__(self,etl_path='ETLC'):
         self.ETL_PATH = etl_path
         self.WRITERS=0

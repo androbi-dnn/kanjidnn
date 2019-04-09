@@ -12,7 +12,7 @@ from keras.callbacks import CSVLogger
 class DNNTool():
 
     def __init__(self):
-        self.opt = None
+        self.optimizer = None
         self.model = None
         self.model_compiled = False
         self.data = None
@@ -23,30 +23,34 @@ class DNNTool():
         self.set_optimizer()
 
     def set_optimizer(self, optimizer = Adam(lr=1e-4)):
+        """Set the Keras optimizer to use for training."""
         if not isinstance(optimizer, Optimizer):
-            print("Error: optimizer must be a Keras Optimizer")
-            return
+            raise TypeError('optimizer must be of type keras.optimizers.Optimizer')
         self.optimizer = optimizer
         self.model_compiled = False
         print("Optimizer",type(self.optimizer).__name__,"set. Learning rate:",self.optimizer.lr)
 
     def set_model(self, model):
+        """Set the Keras model to use for training."""
         if not isinstance(model, Model):
-            print("Error: model must be a Keras Model")
-            return
+            raise TypeError('model must be of type keras.models.Model')
         self.model = model
         self.model_compiled = False
 
     def set_data_source(self, data):
+        """Set an instance of DataETL as data source."""
+        # TODO: add type check
         self.data = data
 
     def compile(self):
+        """Compile the Keras model."""
         print("Compiling model ..")
         self.model.compile(loss='sparse_categorical_crossentropy', optimizer=self.optimizer, 
             metrics=['accuracy'])
         self.model_compiled = True
 
     def load_data(self,only_first=False):
+        """Load data from data source."""
         if self.data is None:
             print("Error: data source has not been set. Use set_data_source() to specify data source.")
             return
@@ -55,6 +59,7 @@ class DNNTool():
         self.data_loaded = True
     
     def info(self):
+        """Print information about current state."""
         print("------- Info --------")
         if self.data is not None:
             print("Data source:",type(self.data).__name__)
@@ -77,6 +82,7 @@ class DNNTool():
             print("Model type not set.")
 
     def train(self, epochs=10, batch_size=32, logger_fn=None):
+        """Train the model with training data."""
         print ("Start training ..")
         callbacks = []
         if logger_fn is not None:
@@ -84,6 +90,7 @@ class DNNTool():
         self.model.fit(self.data.x_train, self.data.y_train, epochs=epochs, batch_size=batch_size,  callbacks=callbacks) 
 
     def evaluate(self, batch_size=32):
+        """Evaluate the model with test data."""
         score, acc = self.model.evaluate(self.data.x_test, self.data.y_test, batch_size=batch_size, verbose=0)
         print ("Test size: ", self.data.x_test.shape[0])
         print ("Test Score: ", score)

@@ -98,7 +98,7 @@ class ModelBag():
         x = layers.GlobalAveragePooling2D()(x)
         # OUTPUT: 1 x 1 x 1024
         x = layers.Reshape(shape, name='reshape_1')(x)
-        x = layers.Dropout(dropout, name='dropout')(x)
+        x = layers.Dropout(rate=dropout, name='dropout')(x)
         # MACC: 1024 * classes = 1024*2965 = 3036160
         x = layers.Conv2D(classes, (1, 1),
                             padding='same',
@@ -178,7 +178,7 @@ class ModelBag():
         model.add(Conv2D(128, (3, 3), padding='same', kernel_initializer='he_normal'))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
+        model.add(Dropout(rate=0.25))
 
         # MACC: 3*3*128*16*16*256 = 75.497.472
         model.add(Conv2D(256, (3, 3), padding='same', kernel_initializer='he_normal'))
@@ -187,7 +187,7 @@ class ModelBag():
         model.add(Conv2D(256, (3, 3), padding='same', kernel_initializer='he_normal'))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
+        model.add(Dropout(rate=0.25))
 
         # MACC: 3*3*256*8*8*512 = 75.497.472
         model.add(Conv2D(512, (3, 3), padding='same', kernel_initializer='he_normal'))
@@ -196,21 +196,21 @@ class ModelBag():
         model.add(Conv2D(512, (3, 3), padding='same', kernel_initializer='he_normal'))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
+        model.add(Dropout(rate=0.25))
         # output is 4*4*512 = 7680, MACC: 7680*4096 = 31.457.280
         model.add(Flatten())
         model.add(Dense(4096, activation="relu", kernel_initializer='he_normal'))
-        model.add(Dropout(0.5))
+        model.add(Dropout(rate=0.5))
         # MACC: 4096*4096 = 16.777.216
         model.add(Dense(4096, activation="relu", kernel_initializer='he_normal'))
-        model.add(Dropout(0.5))
+        model.add(Dropout(rate=0.5))
         # MACC: 4096*classes = 4096*2965 = 12.144.640 (dataset 9B)
         model.add(Dense(classes, activation="softmax"))
 
         # MACC total: 2359296+75497472*7+31457280+16777216+12144640=591.220.736
         return model
 
-    def M16_drop(self, input_shape=None, classes=1000):
+    def M16_drop(self, input_shape=None, classes=1000, dropout_conv=0.25, dropout_dense=0.5):
 
         model = Sequential(name='M16_drop')
         # IN: 64x64x1
@@ -221,7 +221,7 @@ class ModelBag():
             kernel_initializer='he_normal', name='conv1_2'))
         
         model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
+        model.add(Dropout(rate=dropout_conv))
 
         # IN: 32x32x64
         model.add(Conv2D(128, (3, 3), padding="same", activation='relu', 
@@ -230,31 +230,31 @@ class ModelBag():
         model.add(Conv2D(128, (3, 3), padding="same", activation='relu', 
             kernel_initializer='he_normal', name='conv2_2'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
+        model.add(Dropout(rate=dropout_conv))
 
         # IN: 16x16x128
         model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
             kernel_initializer='he_normal', name='conv3_1'))
         # IN: 16x16x256
-        # model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
-        #     kernel_initializer='he_normal', name='conv3_2'))
+        model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
+            kernel_initializer='he_normal', name='conv3_2'))
         # IN: 16x16x256
         model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
             kernel_initializer='he_normal', name='conv3_3'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
+        model.add(Dropout(rate=dropout_conv))
 
         # IN: 8x8x256
         model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
             kernel_initializer='he_normal', name='conv4_1'))
         # IN: 8x8x512
-        # model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
-        #     kernel_initializer='he_normal', name='conv4_2'))
+        model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
+            kernel_initializer='he_normal', name='conv4_2'))
         # IN: 8x8x512
         model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
             kernel_initializer='he_normal', name='conv4_3'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
+        model.add(Dropout(rate=dropout_conv))
 
         # # IN: 4x4x512
         # model.add(Conv2D(512, (3, 3), padding="same",
@@ -266,14 +266,14 @@ class ModelBag():
         # model.add(Conv2D(1024, (3, 3), padding="same",
         #                 activation='relu', kernel_initializer='he_normal', name='conv5_3'))
         # model.add(MaxPooling2D(pool_size=(2, 2)))
-        # model.add(Dropout(0.5))
+        # model.add(Dropout(rate=0.5))
 
         model.add(Flatten())
         # IN: 2x2x1024=4096
         model.add(Dense(4096, activation="relu", kernel_initializer='he_normal'))
-        model.add(Dropout(0.5))
+        model.add(Dropout(rate=dropout_dense))
         model.add(Dense(4096, activation="relu", kernel_initializer='he_normal'))
-        model.add(Dropout(0.5))
+        model.add(Dropout(rate=dropout_dense))
         model.add(Dense(classes, activation="softmax"))
 
         return model
