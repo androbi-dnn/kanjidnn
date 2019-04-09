@@ -22,6 +22,7 @@ class DNNTool():
 
     def set_optimizer(self, opt=Adam(lr=1e-4)):
         self.opt = opt
+        print("Optimizer",type(self.opt).__name__,"set. Remember to recompile your model.")
 
     def set_model(self, model):
         self.model = model

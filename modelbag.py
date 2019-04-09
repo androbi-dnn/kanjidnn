@@ -213,47 +213,48 @@ class ModelBag():
 
     def M16_drop(self, input_shape=None, classes=1000):
 
-        model = Sequential()
+        model = Sequential(name='M16_drop')
         # IN: 64x64x1
         model.add(Conv2D(64, (3, 3), input_shape=input_shape, padding='same', activation="relu", 
-            name='conv1_1', kernel_initializer='he_normal'))
+            kernel_initializer='he_normal', name='conv1_1'))
         # IN: 64x64x64
         model.add(Conv2D(64, (3, 3), padding="same", activation='relu', 
             kernel_initializer='he_normal', name='conv1_2'))
         
-        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
 
         # IN: 32x32x64
-        model.add(Conv2D(128, (3, 3), padding="same",  activation='relu', kernel_initializer='he_normal', name='conv2_1'))
+        model.add(Conv2D(128, (3, 3), padding="same", activation='relu', 
+            kernel_initializer='he_normal', name='conv2_1'))
         # IN: 32x32x128
-        model.add(Conv2D(128, (3, 3), padding="same",
-                        activation='relu', kernel_initializer='he_normal', name='conv2_2'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        model.add(Conv2D(128, (3, 3), padding="same", activation='relu', 
+            kernel_initializer='he_normal', name='conv2_2'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
 
         # IN: 16x16x128
-        model.add(Conv2D(256, (3, 3), padding="same",
-                        activation='relu', kernel_initializer='he_normal', name='conv3_1'))
+        model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
+            kernel_initializer='he_normal', name='conv3_1'))
         # IN: 16x16x256
-        model.add(Conv2D(256, (3, 3), padding="same",
-                        activation='relu', kernel_initializer='he_normal', name='conv3_2'))
+        model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
+            kernel_initializer='he_normal', name='conv3_2'))
         # IN: 16x16x256
-        model.add(Conv2D(256, (3, 3), padding="same",
-                        activation='relu', kernel_initializer='he_normal', name='conv3_3'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
+            kernel_initializer='he_normal', name='conv3_3'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
 
         # IN: 8x8x256
-        model.add(Conv2D(512, (3, 3), padding="same",
-                        activation='relu', kernel_initializer='he_normal', name='conv4_1'))
+        model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
+            kernel_initializer='he_normal', name='conv4_1'))
         # IN: 8x8x512
-        model.add(Conv2D(512, (3, 3), padding="same",
-                        activation='relu', kernel_initializer='he_normal', name='conv4_2'))
+        model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
+            kernel_initializer='he_normal', name='conv4_2'))
         # IN: 8x8x512
-        model.add(Conv2D(512, (3, 3), padding="same",
-                        activation='relu', kernel_initializer='he_normal', name='conv4_3'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
+            kernel_initializer='he_normal', name='conv4_3'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
 
         # # IN: 4x4x512
@@ -265,7 +266,7 @@ class ModelBag():
         # # IN: 4x4x1024
         # model.add(Conv2D(1024, (3, 3), padding="same",
         #                 activation='relu', kernel_initializer='he_normal', name='conv5_3'))
-        # model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        # model.add(MaxPooling2D(pool_size=(2, 2)))
         # model.add(Dropout(0.5))
 
         model.add(Flatten())
