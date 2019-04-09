@@ -1,6 +1,8 @@
 import numpy as np
 import os
 
+from keras.models import Model
+from keras.optimizers import Optimizer 
 from keras.optimizers import Adam 
 from keras.callbacks import CSVLogger
 
@@ -20,19 +22,28 @@ class DNNTool():
         self.input_shape = None
         self.set_optimizer()
 
-    def set_optimizer(self, opt=Adam(lr=1e-4)):
-        self.opt = opt
-        print("Optimizer",type(self.opt).__name__,"set. Remember to recompile your model.")
+    def set_optimizer(self, optimizer = Adam(lr=1e-4)):
+        if not isinstance(optimizer, Optimizer):
+            print("Error: optimizer must be a Keras Optimizer")
+            return
+        self.optimizer = optimizer
+        self.model_compiled = False
+        print("Optimizer",type(self.optimizer).__name__,"set. Learning rate:",self.optimizer.lr)
 
     def set_model(self, model):
+        if not isinstance(model, Model):
+            print("Error: model must be a Keras Model")
+            return
         self.model = model
+        self.model_compiled = False
 
     def set_data_source(self, data):
         self.data = data
 
     def compile(self):
         print("Compiling model ..")
-        self.model.compile(loss='sparse_categorical_crossentropy', optimizer=self.opt, metrics=['accuracy'])
+        self.model.compile(loss='sparse_categorical_crossentropy', optimizer=self.optimizer, 
+            metrics=['accuracy'])
         self.model_compiled = True
 
     def load_data(self,only_first=False):
@@ -58,7 +69,10 @@ class DNNTool():
         
         if self.model is not None:
             print("Model type:",self.model.name)
-            self.model.summary()
+            if self.model_compiled:
+                self.model.summary()
+            else:
+                print("Model not yet compiled.")
         else:
             print("Model type not set.")
 
