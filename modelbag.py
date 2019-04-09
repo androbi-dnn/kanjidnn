@@ -169,14 +169,13 @@ class ModelBag():
 
         # K × K × Cin × Hout × Wout × Cout
         # MACC: 3*3*1*64*64*64 = 2.359.296
-        model.add(Conv2D(64, (3, 3), padding='same',
-                        input_shape=input_shape, kernel_initializer='he_normal'))
+        model.add(Conv2D(64, (3, 3), padding='same', input_shape=input_shape, 
+            kernel_initializer='he_normal'))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
 
         # MACC: 3*3*64*32*32*128 = 75.497.472
-        model.add(Conv2D(128, (3, 3), padding='same',
-                        kernel_initializer='he_normal'))
+        model.add(Conv2D(128, (3, 3), padding='same', kernel_initializer='he_normal'))
         model.add(Activation('relu'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
@@ -237,8 +236,8 @@ class ModelBag():
         model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
             kernel_initializer='he_normal', name='conv3_1'))
         # IN: 16x16x256
-        model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
-            kernel_initializer='he_normal', name='conv3_2'))
+        # model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
+        #     kernel_initializer='he_normal', name='conv3_2'))
         # IN: 16x16x256
         model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
             kernel_initializer='he_normal', name='conv3_3'))
@@ -249,8 +248,8 @@ class ModelBag():
         model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
             kernel_initializer='he_normal', name='conv4_1'))
         # IN: 8x8x512
-        model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
-            kernel_initializer='he_normal', name='conv4_2'))
+        # model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
+        #     kernel_initializer='he_normal', name='conv4_2'))
         # IN: 8x8x512
         model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
             kernel_initializer='he_normal', name='conv4_3'))
