@@ -210,69 +210,70 @@ class ModelBag():
         # MACC total: 2359296+75497472*7+31457280+16777216+12144640=591.220.736
         return model
 
-    def M16_drop(self, input_shape=None, classes=1000, dropout_conv=0.25, dropout_dense=0.5):
+    def M16_drop(self, input_shape=None, classes=1000, kernel_initializer = 'he_normal', 
+        dropout_conv=0.25, dropout_dense=0.5):
 
         model = Sequential(name='M16_drop')
         # IN: 64x64x1
         model.add(Conv2D(64, (3, 3), input_shape=input_shape, padding='same', activation="relu", 
-            kernel_initializer='he_normal', name='conv1_1'))
+            kernel_initializer=kernel_initializer, name='conv1_1'))
         # IN: 64x64x64
         model.add(Conv2D(64, (3, 3), padding="same", activation='relu', 
-            kernel_initializer='he_normal', name='conv1_2'))
+            kernel_initializer=kernel_initializer, name='conv1_2'))
         
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(rate=dropout_conv))
 
         # IN: 32x32x64
         model.add(Conv2D(128, (3, 3), padding="same", activation='relu', 
-            kernel_initializer='he_normal', name='conv2_1'))
+            kernel_initializer=kernel_initializer, name='conv2_1'))
         # IN: 32x32x128
         model.add(Conv2D(128, (3, 3), padding="same", activation='relu', 
-            kernel_initializer='he_normal', name='conv2_2'))
+            kernel_initializer=kernel_initializer, name='conv2_2'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(rate=dropout_conv))
 
         # IN: 16x16x128
         model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
-            kernel_initializer='he_normal', name='conv3_1'))
+            kernel_initializer=kernel_initializer, name='conv3_1'))
         # IN: 16x16x256
         model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
-            kernel_initializer='he_normal', name='conv3_2'))
+            kernel_initializer=kernel_initializer, name='conv3_2'))
         # IN: 16x16x256
         model.add(Conv2D(256, (3, 3), padding="same", activation='relu', 
-            kernel_initializer='he_normal', name='conv3_3'))
+            kernel_initializer=kernel_initializer, name='conv3_3'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(rate=dropout_conv))
 
         # IN: 8x8x256
         model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
-            kernel_initializer='he_normal', name='conv4_1'))
+            kernel_initializer=kernel_initializer, name='conv4_1'))
         # IN: 8x8x512
         model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
-            kernel_initializer='he_normal', name='conv4_2'))
+            kernel_initializer=kernel_initializer, name='conv4_2'))
         # IN: 8x8x512
         model.add(Conv2D(512, (3, 3), padding="same", activation='relu', 
-            kernel_initializer='he_normal', name='conv4_3'))
+            kernel_initializer=kernel_initializer, name='conv4_3'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(rate=dropout_conv))
 
         # IN: 4x4x512
         model.add(Conv2D(512, (3, 3), padding="same",
-                        activation='relu', kernel_initializer='he_normal', name='conv5_1'))
+                        activation='relu', kernel_initializer=kernel_initializer, name='conv5_1'))
         # IN: 4x4x512
         model.add(Conv2D(1024, (3, 3), padding="same",
-                        activation='relu', kernel_initializer='he_normal', name='conv5_2'))
+                        activation='relu', kernel_initializer=kernel_initializer, name='conv5_2'))
         # IN: 4x4x1024
         model.add(Conv2D(1024, (3, 3), padding="same",
-                        activation='relu', kernel_initializer='he_normal', name='conv5_3'))
+                        activation='relu', kernel_initializer=kernel_initializer, name='conv5_3'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(rate=dropout_conv))
 
         model.add(Flatten())
         # IN: 2x2x1024=4096
-        model.add(Dense(4096, activation="relu", kernel_initializer='he_normal'))
+        model.add(Dense(4096, activation="relu", kernel_initializer=kernel_initializer))
         model.add(Dropout(rate=dropout_dense))
-        model.add(Dense(4096, activation="relu", kernel_initializer='he_normal'))
+        model.add(Dense(4096, activation="relu", kernel_initializer=kernel_initializer))
         model.add(Dropout(rate=dropout_dense))
         model.add(Dense(classes, activation="softmax"))
 
