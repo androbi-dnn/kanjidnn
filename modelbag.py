@@ -216,7 +216,7 @@ class ModelBag():
         model = Sequential(name='M16_drop')
         # IN: 64x64x1
         model.add(Conv2D(64, (3, 3), input_shape=input_shape, padding='same', activation="relu", 
-            kernel_initializer=kernel_initializer, name='conv1_1'),trainable=train_lower)
+            kernel_initializer=kernel_initializer, name='conv1_1',trainable=train_lower))
         # IN: 64x64x64
         model.add(Conv2D(64, (3, 3), padding="same", activation='relu', 
             kernel_initializer=kernel_initializer, name='conv1_2',trainable=train_lower))
