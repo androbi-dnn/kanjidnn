@@ -8,10 +8,6 @@ from keras import backend
 from keras.utils import np_utils
 from abc import ABC, abstractmethod
 
-
-# base class that implements some common functions. implement 
-# abstract methods for each type of dataset.
-
 class DataETL(ABC):
     """Abstract ETL data source base class."""
     def __init__(self,etl_path='ETLC'):
@@ -72,12 +68,12 @@ class DataETL(ABC):
         self.shuffle_in_unison_scary()
 
         # split off last part
-        self.x_test = self.x_train[n_split:n_size,:,:,:]
-        self.y_test = self.y_train[n_split:n_size,:]
+        self.x_test = np.copy(self.x_train[n_split:n_size,:,:,:])
+        self.y_test = np.copy(self.y_train[n_split:n_size,:])
 
         # resize first part
-        self.x_train.resize([n_split,64,64,1],refcheck=False)
-        self.y_train.resize([n_split,1],refcheck=False)
+        self.x_train.resize([n_split,64,64,1])
+        self.y_train.resize([n_split,1])
         
         return
 
@@ -274,8 +270,8 @@ class DataETL9B(DataETL):
 
 if __name__ == '__main__':
     # typical usage:
-    data = DataETL8B()
-    nb_classes, input_shape = data.load_data(only_first=False)
+    data = DataETL9B()
+    nb_classes, input_shape = data.load_data(only_first=True)
     print("classes:",nb_classes)
     print("input_shape:",input_shape)
     print("x_train.shape:", data.x_train.shape)

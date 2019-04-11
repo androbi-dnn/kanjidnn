@@ -6,9 +6,6 @@ from keras.optimizers import Optimizer
 from keras.optimizers import Adam 
 from keras.callbacks import CSVLogger
 
-#import dataetl
-#from kanjidnn import ModelBag
-
 class DNNTool():
 
     def __init__(self):
@@ -28,7 +25,7 @@ class DNNTool():
             raise TypeError('optimizer must be of type keras.optimizers.Optimizer')
         self.optimizer = optimizer
         self.model_compiled = False
-        print("Optimizer",type(self.optimizer).__name__,"set. Learning rate:",self.optimizer.lr)
+        print("Optimizer",type(self.optimizer).__name__,"set.")
 
     def set_model(self, model):
         """Set the Keras model to use for training."""
@@ -81,13 +78,13 @@ class DNNTool():
         else:
             print("Model type not set.")
 
-    def train(self, epochs=10, batch_size=32, logger_fn=None):
+    def train(self, initial_epoch=0, epochs=10, batch_size=32, logger_fn=None):
         """Train the model with training data."""
         print ("Start training ..")
         callbacks = []
         if logger_fn is not None:
             callbacks.append(CSVLogger(logger_fn, append=True, separator=';'))
-        self.model.fit(self.data.x_train, self.data.y_train, epochs=epochs, batch_size=batch_size,  callbacks=callbacks) 
+        self.model.fit(self.data.x_train, self.data.y_train, initial_epoch=initial_epoch, epochs=epochs, batch_size=batch_size,  callbacks=callbacks) 
 
     def evaluate(self, batch_size=32):
         """Evaluate the model with test data."""
@@ -99,16 +96,5 @@ class DNNTool():
     def save_weights(self, name):
         self.model.save_weights(name)
 
-    def load_model_weights(self, name, by_name=False):
+    def load_weights(self, name, by_name=False):
         self.model.load_weights(name,by_name=by_name)
-
-if __name__ == '__main__':
-    dnn = DNNTool()
-    #dnn.set_data_source(DataETL8B())
-    #dnn.load_data(only_first=True)
-    #bag = ModelBag()
-    #dnn.set_model(bag.mobile_net_64(classes = dnn.n_output, input_shape = dnn.input_shape))
-    dnn.info()
-    #dnn.compile()
-    #dnn.train(epochs=1, batch_size=32, logger_fn='log.csv')
-    #dnn.save_weights('gdrive/My Drive/Data/Vgg/weights_etl9b_10.h5')
