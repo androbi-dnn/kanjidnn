@@ -99,8 +99,8 @@ class DNNTool():
     def save_weights(self, name):
         self.model.save_weights(name)
 
-    def load_model_weights(self, name):
-        self.model.load_weights(name)
+    def load_model_weights(self, name, by_name=False):
+        self.model.load_weights(name,by_name=by_name)
 
 if __name__ == '__main__':
     dnn = DNNTool()

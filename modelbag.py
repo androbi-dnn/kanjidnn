@@ -211,7 +211,7 @@ class ModelBag():
         return model
 
     def M16_drop(self, input_shape=None, classes=1000, kernel_initializer = 'he_normal', 
-        dropout_conv=0.25, dropout_dense=0.5):
+        dropout_conv=0.25, dropout_dense=0.5, use_inner_conv = False):
 
         model = Sequential(name='M16_drop')
         # IN: 64x64x1
@@ -257,17 +257,18 @@ class ModelBag():
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(rate=dropout_conv))
 
-        # IN: 4x4x512
-        model.add(Conv2D(512, (3, 3), padding="same",
-                        activation='relu', kernel_initializer=kernel_initializer, name='conv5_1'))
-        # IN: 4x4x512
-        model.add(Conv2D(1024, (3, 3), padding="same",
-                        activation='relu', kernel_initializer=kernel_initializer, name='conv5_2'))
-        # IN: 4x4x1024
-        model.add(Conv2D(1024, (3, 3), padding="same",
-                        activation='relu', kernel_initializer=kernel_initializer, name='conv5_3'))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(rate=dropout_conv))
+        if use_inner_conv:
+            # IN: 4x4x512
+            model.add(Conv2D(512, (3, 3), padding="same",
+                            activation='relu', kernel_initializer=kernel_initializer, name='conv5_1'))
+            # IN: 4x4x512
+            model.add(Conv2D(1024, (3, 3), padding="same",
+                            activation='relu', kernel_initializer=kernel_initializer, name='conv5_2'))
+            # IN: 4x4x1024
+            model.add(Conv2D(1024, (3, 3), padding="same",
+                            activation='relu', kernel_initializer=kernel_initializer, name='conv5_3'))
+            model.add(MaxPooling2D(pool_size=(2, 2)))
+            model.add(Dropout(rate=dropout_conv))
 
         model.add(Flatten())
         # IN: 2x2x1024=4096
