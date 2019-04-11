@@ -55,6 +55,15 @@ class DataETL(ABC):
         self.y_train[:,0] = np.array([labels_dict[l] for l in self.y_train.flatten()], dtype=np.uint16)
         return nb_classes
     
+    def jis_2_char(self, jis_int):
+        b = b'\033$B' + bytes.fromhex(hex(jis_int)[2:])
+        return b.decode('iso2022_jp')
+
+    def label_2_char(self, label):
+        jis_int = self.inv_map[label]
+        return self.jis_2_char(jis_int)
+    
+
     # helper to get test and training sets. Call relabel() before to obtain nb_classes
     # This is a memory optimized version of train_test_split that was necessary for 
     # the ETL 9B dataset on smaller RAM machines.
@@ -235,8 +244,6 @@ class DataETL9B(DataETL):
                     if i==self.SAVE_WRITER:
                         save_img.paste(r[-1], (64*(n_rec%33), 64*(n_rec//33)))
                     new_img.paste(r[-1], (0, 0))
-                    #if r[1]>=12352 and r[1]<=12447:
-                    #print(n_rec,i,r[1],r[1]>=12352 and r[1]<=12447)
                     iI = Image.eval(new_img, lambda x: not x)
                     # append as numeric data to image X and labels Y
                     outData = np.asarray(iI.getdata(), dtype=np.uint8).reshape(self.WIDTH, self.HEIGHT)                        
@@ -254,7 +261,7 @@ class DataETL9B(DataETL):
         n_sets = self.NUM_DATASETS+1
         if only_first:
             n_sets = 2
-        # characters has a size of 2.4 Gb. Allocate now and don't copy around
+        # x_train has a size of 2.4 Gb. Allocate now and don't copy around
         size = self.NUM_CHARS*self.WRITERS*(n_sets-1)
         self.x_train = np.empty([size, 64, 64, 1], dtype=np.uint8)
         self.y_train = np.empty([size, 1], dtype=np.uint16)
@@ -278,3 +285,4 @@ if __name__ == '__main__':
     print("y_train.shape:", data.y_train.shape)
     print("training:",data.x_train.shape[0], "testing:", data.x_test.shape[0], "total:",
             data.x_train.shape[0]+data.x_test.shape[0])
+    print(data.label_2_char(1234))
